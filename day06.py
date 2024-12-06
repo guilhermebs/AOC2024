@@ -25,11 +25,16 @@ def guard_loops(init_position, init_dir, obstacles, dim_x, dim_y):
             guard_position = next_pos
     return False
 
+
 def solve():
     input_file_contents = open(os.path.join("input", "day06")).read().rstrip()
     lines = input_file_contents.splitlines()
-    init_position = [(x, y) for y, line in enumerate(lines) for x, c in enumerate(line) if c == '^'][0]
-    obstacles = {(x, y) for y, line in enumerate(lines) for x, c in enumerate(line) if c == '#'}
+    init_position = [
+        (x, y) for y, line in enumerate(lines) for x, c in enumerate(line) if c == "^"
+    ][0]
+    obstacles = {
+        (x, y) for y, line in enumerate(lines) for x, c in enumerate(line) if c == "#"
+    }
     dim_y, dim_x = len(lines), len(lines[0])
     init_dir = (0, -1)
     visited = set()
@@ -50,7 +55,9 @@ def solve():
         for oy in range(dim_y):
             if (ox, oy) == init_position or (ox, oy) in obstacles:
                 continue
-            sol_part2 += guard_loops(init_position, init_dir, obstacles | set([(ox, oy)]), dim_x, dim_y) 
+            sol_part2 += guard_loops(
+                init_position, init_dir, obstacles | set([(ox, oy)]), dim_x, dim_y
+            )
     print("Part 2:", sol_part2)
 
 
