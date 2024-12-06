@@ -15,6 +15,7 @@ def find_xmas_dir(grid, i, j, letter, dir):
     else:
         return find_xmas_dir(grid, i + dir[0], j + dir[1], NEXT_LETTER[letter], dir)
 
+
 def find_mas(grid, i, j, letter, dir):
     if i < 0 or j < 0 or i >= len(grid) or j >= len(grid[0]):
         return None
@@ -24,7 +25,6 @@ def find_mas(grid, i, j, letter, dir):
         return (i - dir[0], j - dir[1])
     else:
         return find_mas(grid, i + dir[0], j + dir[1], NEXT_LETTER[letter], dir)
-
 
 
 def solve():
@@ -48,7 +48,12 @@ def solve():
     )
     print("Part 1:", sol_part1)
 
-    a_coords = Counter(find_mas(grid, i, j, 'M', dir) for dir in [(1, 1), (-1, 1), (1, -1), (-1, -1)] for i in range(len(grid)) for j in range(len(grid[0])))
+    a_coords = Counter(
+        find_mas(grid, i, j, "M", dir)
+        for dir in [(1, 1), (-1, 1), (1, -1), (-1, -1)]
+        for i in range(len(grid))
+        for j in range(len(grid[0]))
+    )
     sol_part2 = sum(v == 2 for v in a_coords.values())
     print("Part 2:", sol_part2)
 
