@@ -13,7 +13,6 @@ def guard_loops(init_position, init_dir, obstacles, dim_x, dim_y):
     visited = set()
     guard_position = init_position
     guard_dir = init_dir
-    len(obstacles)
     while 0 <= guard_position[0] < dim_x and 0 <= guard_position[1] < dim_y:
         if (guard_position, guard_dir) in visited:
             return True
@@ -51,13 +50,10 @@ def solve():
     print("Part 1:", len(visited))
 
     sol_part2 = 0
-    for ox in range(dim_x):
-        for oy in range(dim_y):
-            if (ox, oy) == init_position or (ox, oy) in obstacles:
-                continue
-            sol_part2 += guard_loops(
-                init_position, init_dir, obstacles | set([(ox, oy)]), dim_x, dim_y
-            )
+    for pos in visited - set([init_position]):
+        sol_part2 += guard_loops(
+            init_position, init_dir, obstacles | set([pos]), dim_x, dim_y
+        )
     print("Part 2:", sol_part2)
 
 
