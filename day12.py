@@ -44,6 +44,7 @@ def fill(x0, y0, farm):
     dx, dy = 0.5, 0
     x, y = start_pos[0] + dx, start_pos[1] + dy
     n_sides = 1
+    # TODO: take into account internal fences!
     while (x, y) != start_pos:
         xx, yy = x + dx, y + dy
         if (xx, yy) in edges:
