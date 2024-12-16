@@ -64,7 +64,7 @@ def fill(x0, y0, farm):
 
 
 def solve():
-    input_file_contents = open(os.path.join("input", "day12")).read().rstrip()
+    input_file_contents = open(os.path.join("input", "day12_ex2")).read().rstrip()
     farm = {
         (x, y): c
         for y, line in enumerate(input_file_contents.splitlines())
