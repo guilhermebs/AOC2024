@@ -50,9 +50,9 @@ def prepare_script(day):
 
 
     if __name__ == "__main__":
-        start = time.time()
+        start = time.perf_counter_ns()
         solve()
-        print(f"Run time: {{time.time() - start:.3f}}s")
+        print(f"Run time: {{(time.perf_counter_ns() - start)/1_000}}µs")
     """)[1:]
 
     fn_script = os.path.join(SCRIPTS_DIR, SCRIPT_FILE_FORMATTER.format(day=day))

@@ -1,4 +1,3 @@
-import os
 import time
 
 
@@ -73,6 +72,6 @@ def solve():
 
 
 if __name__ == "__main__":
-    start = time.time()
+    start = time.perf_counter_ns()
     solve()
-    print(f"Run time: {time.time() - start:.3f}s")
+    print(f"Run time: {(time.perf_counter_ns() - start)/1_000}µs")
