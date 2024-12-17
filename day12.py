@@ -40,16 +40,16 @@ def fill(x0, y0, farm):
         (-0.5, 0): ((0, -0.5), (0, 0.5)),
         (0, -0.5): ((0.5, 0), (-0.5, 0)),
     }
-    start_pos = min(edges)
-    dx, dy = 0.5, 0
-    x, y = start_pos[0] + dx, start_pos[1] + dy
-    n_sides = 1
-    # TODO: take into account internal fences!
-    while (x, y) != start_pos:
-        xx, yy = x + dx, y + dy
-        if (xx, yy) in edges:
-            x, y = xx, yy
-        else:
+    seen = set()
+    n_sides = 0
+    while seen != edges:
+        start_pos = min(edges - seen)
+        dx, dy = 0.5, 0
+        x, y = start_pos[0] + dx, start_pos[1] + dy
+        seen.add(start_pos)
+        n_sides += 1
+        while (x, y) != start_pos:
+            seen.add((x, y))
             for dxx, dyy in possible_next_dir[dx, dy]:
                 xx, yy = x + dxx, y + dyy
                 if (xx, yy) in edges:
@@ -58,13 +58,14 @@ def fill(x0, y0, farm):
                     dx, dy = dxx, dyy
                     break
             else:
-                raise Exception()
-
+                xx, yy = x + dx, y + dy
+                if (xx, yy) in edges:
+                    x, y = xx, yy
     return garden, len(garden), perimeter, n_sides
 
 
 def solve():
-    input_file_contents = open(os.path.join("input", "day12_ex2")).read().rstrip()
+    input_file_contents = open(os.path.join("input", "day12")).read().rstrip()
     farm = {
         (x, y): c
         for y, line in enumerate(input_file_contents.splitlines())
