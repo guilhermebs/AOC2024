@@ -86,7 +86,8 @@ def solve():
         print(seq)
         candidates = [seq]
         for pos, keypad in zip(starting_positions, keypads):
-            candidates = list(itertools.chain.from_iterable(commands_to_type(s, pos, keypad) for s in candidates))
+            #candidates = list(itertools.chain.from_iterable(commands_to_type(s, pos, keypad) for s in candidates))
+            candidates = commands_to_type(candidates[0], pos, keypad)
         sol_part1 += min(len(c) for c in candidates) * int(seq[:-1])
 
     print("Part 1:", sol_part1)
