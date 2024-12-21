@@ -1,7 +1,7 @@
-import heapq
-import itertools
+import functools
 import os
 import time
+
 
 import more_itertools
 
@@ -15,15 +15,11 @@ NUMERICAL_KEYPAD = {
     (0, 2): "1",
     (1, 2): "2",
     (2, 2): "3",
-    (0, 3): None,
     (1, 3): "0",
     (2, 3): "A",
 }
 
-NUMERICAL_START_POS = (2, 3)
-
 DIRECTIONAL_KEYPAD = {
-    (0, 0): None,
     (1, 0): "^",
     (2, 0): "A",
     (0, 1): "<",
@@ -31,65 +27,81 @@ DIRECTIONAL_KEYPAD = {
     (2, 1): ">",
 }
 
-DIRECTIONAL_START_POS = (2, 0)
-
 KEYPADS = {
     "NUMERICAL": NUMERICAL_KEYPAD,
     "DIRECTIONAL": DIRECTIONAL_KEYPAD,
 }
 
+INVERSE_KEYPADS = {
+    "NUMERICAL": {v: k for k, v in NUMERICAL_KEYPAD.items()},
+    "DIRECTIONAL": {v: k for k, v in DIRECTIONAL_KEYPAD.items()},
+}
+
 DIR2TUP = {
-    '^': (0, -1),
-    'v': (0, 1),
-    '<': (-1, 0),
-    '>': (1, 0),
+    "^": (0, -1),
+    "v": (0, 1),
+    "<": (-1, 0),
+    ">": (1, 0),
 }
 
 
-def commands_to_type(to_type, position, keypad):
-    commands = ['']
-    pos = position
-    for c in to_type:
-        new_commands = []
-        target_pos = [k for k, v in keypad.items() if v == c][0]
-        dx, dy = target_pos[0] - pos[0], target_pos[1] - pos[1]
-        directions = (
-            (">" if dx > 0 else "<") * abs(dx)
-            + ("v" if dy > 0 else "^") * abs(dy)
-        )
-        for permutation in more_itertools.distinct_permutations(directions):
-            p = pos
-            for cc in permutation:
-                d = DIR2TUP[cc]
-                p = p[0]+d[0], p[1] + d[1] 
-                if keypad[p] is None:
-                    break
-            else:
-                new_commands.extend(c + ''.join(permutation) + 'A' for c in commands)
-        commands = new_commands
-        pos = target_pos
+@functools.cache
+def type_single_command(c, prev_c, keypad):
+    commands = []
+    target_pos = INVERSE_KEYPADS[keypad][c]
+    pos = INVERSE_KEYPADS[keypad][prev_c]
+    dx, dy = target_pos[0] - pos[0], target_pos[1] - pos[1]
+    directions = (">" if dx > 0 else "<") * abs(dx) + ("v" if dy > 0 else "^") * abs(dy)
+    for permutation in more_itertools.distinct_permutations(directions):
+        p = pos
+        for cc in permutation:
+            d = DIR2TUP[cc]
+            p = p[0] + d[0], p[1] + d[1]
+            if p not in KEYPADS[keypad]:
+                break
+        else:
+            commands.append("".join(permutation) + "A")
+    return max(
+        commands,
+        key=lambda cmd: sum(cprev == cnext for cprev, cnext in zip(cmd, cmd[1:])),
+    )
+
+
+@functools.cache
+def commands_to_type(to_type):
+    assert to_type.endswith("A")
+    prev = "A"
+    commands = ""
+    for char in to_type:
+        commands += type_single_command(char, prev, "DIRECTIONAL")
+        prev = char
     return commands
 
 
 def solve():
     input_file_contents = open(os.path.join("input", "day21")).read().rstrip()
-    sequences = input_file_contents.splitlines()
-    #sequences = ["029A", "980A", "179A", "456A", "379A"]
-    starting_positions = [
-        NUMERICAL_START_POS,
-        DIRECTIONAL_START_POS,
-        DIRECTIONAL_START_POS,
-    ]
-    keypads = [NUMERICAL_KEYPAD, DIRECTIONAL_KEYPAD, DIRECTIONAL_KEYPAD]
-    sol_part1 = 0
-    for seq in sequences:
-        print(seq)
-        candidates = [seq]
-        for pos, keypad in zip(starting_positions, keypads):
-            #candidates = list(itertools.chain.from_iterable(commands_to_type(s, pos, keypad) for s in candidates))
-            candidates = commands_to_type(candidates[0], pos, keypad)
-        sol_part1 += min(len(c) for c in candidates) * int(seq[:-1])
+    codes = input_file_contents.splitlines()
+    # codes = ["029A", "980A", "179A", "456A", "379A"]
 
+    sol_part1 = 0
+    depth = 2
+    for code in codes:
+        print(code)
+        command = ""
+        lengths = {i: 0 for i in range(depth + 1)}
+        commands = {i: "" for i in range(depth + 1)}
+        for char, prev_char in zip(code, "A" + code):
+            # print(char, prev_char)
+            cmd = type_single_command(char, prev_char, "NUMERICAL")
+            lengths[0] += len(cmd)
+            commands[0] += cmd
+            for d in range(depth):
+                cmd = "".join(commands_to_type(c + "A") for c in cmd.split("A")[:-1])
+                lengths[d + 1] += len(cmd)
+                commands[d + 1] += cmd
+            command += cmd
+        sol_part1 += lengths[2] * int(code[:-1])
+        print(len(command))
     print("Part 1:", sol_part1)
 
     sol_part2 = None
