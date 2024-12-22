@@ -1,10 +1,6 @@
 import functools
-import itertools
 import os
 import time
-
-
-import more_itertools
 
 NUMERICAL_KEYPAD = {
     (0, 0): "7",
@@ -45,23 +41,15 @@ DIR2TUP = {
     ">": (1, 0),
 }
 
-COST = {
-    '<': 4,
-    'v': 3,
-    '^': 2,
-    '>': 2,
-    'A': 1,
-}
-
-
 @functools.cache
-def type_single_command(c, prev_c, keypad):
+def type_single_command(c, prev_c, keypad, depth=0):
     commands = []
     target_pos = INVERSE_KEYPADS[keypad][c]
     pos = INVERSE_KEYPADS[keypad][prev_c]
     dx, dy = target_pos[0] - pos[0], target_pos[1] - pos[1]
-    directions = (">" if dx > 0 else "<") * abs(dx) + ("v" if dy > 0 else "^") * abs(dy)
-    for permutation in more_itertools.distinct_permutations(directions):
+    hmoves = (">" if dx > 0 else "<") * abs(dx)
+    vmoves = ("v" if dy > 0 else "^") * abs(dy)
+    for permutation in [hmoves + vmoves, vmoves + hmoves]:
         p = pos
         for cc in permutation:
             d = DIR2TUP[cc]
@@ -70,50 +58,41 @@ def type_single_command(c, prev_c, keypad):
                 break
         else:
             commands.append("".join(permutation) + "A")
-    
-    def score(cmd):
-        nreps = sum(cprev == cnext for cprev, cnext in zip(cmd, cmd[1:]))
-        cost = sum((i+1)*COST[c] for i,c in enumerate(cmd))
-        return (-nreps, cost)
-    return min(
-        commands,
-        key=score)
+
+    return min(commands, key=lambda c: n_commands_to_type(c, depth))
 
 
 @functools.cache
-def commands_to_type(to_type):
+def n_commands_to_type(to_type, depth):
     assert to_type.endswith("A")
+    if depth == 0:
+        return len(to_type)
     prev = "A"
-    commands = ""
+    result = 0
     for char in to_type:
-        commands += type_single_command(char, prev, "DIRECTIONAL")
+        result += n_commands_to_type(
+            type_single_command(char, prev, "DIRECTIONAL", depth=depth-1), depth - 1
+        )
         prev = char
-    return commands
+    return result
 
 
 def solve():
     input_file_contents = open(os.path.join("input", "day21")).read().rstrip()
     codes = input_file_contents.splitlines()
-    #codes = ["029A", "980A", "179A", "456A", "379A"]
 
     sol_part1 = 0
     sol_part2 = 0
-    depth = 2
     for code in codes:
-        print(code)
-        lengths = {i: 0 for i in range(depth + 1)}
+        depth2 = 0
+        depth25 = 0
         for char, prev_char in zip(code, "A" + code):
-            cmd = type_single_command(char, prev_char, "NUMERICAL")
-            lengths[0] += len(cmd)
-            for d in range(depth):
-                cmd = ''.join(commands_to_type(c + 'A') for c in cmd.split('A')[:-1])
-                print(d, len(cmd))
-                lengths[d + 1] += len(cmd)
-        sol_part1 += lengths[2] * int(code[:-1])
-        #sol_part2 += lengths[25] * int(code[:-1])
+            cmd = type_single_command(char, prev_char, "NUMERICAL", 25)
+            depth2 += n_commands_to_type(cmd, 2)
+            depth25 += n_commands_to_type(cmd, 25)
+        sol_part1 += depth2 * int(code[:-1])
+        sol_part2 += depth25 * int(code[:-1])
     print("Part 1:", sol_part1)
-
-    sol_part2 = None
     print("Part 2:", sol_part2)
 
 
