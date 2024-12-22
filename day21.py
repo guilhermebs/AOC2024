@@ -1,4 +1,5 @@
 import functools
+import itertools
 import os
 import time
 
@@ -44,6 +45,14 @@ DIR2TUP = {
     ">": (1, 0),
 }
 
+COST = {
+    '<': 4,
+    'v': 3,
+    '^': 2,
+    '>': 2,
+    'A': 1,
+}
+
 
 @functools.cache
 def type_single_command(c, prev_c, keypad):
@@ -61,10 +70,14 @@ def type_single_command(c, prev_c, keypad):
                 break
         else:
             commands.append("".join(permutation) + "A")
-    return max(
+    
+    def score(cmd):
+        nreps = sum(cprev == cnext for cprev, cnext in zip(cmd, cmd[1:]))
+        cost = sum((i+1)*COST[c] for i,c in enumerate(cmd))
+        return (-nreps, cost)
+    return min(
         commands,
-        key=lambda cmd: sum(cprev == cnext for cprev, cnext in zip(cmd, cmd[1:])),
-    )
+        key=score)
 
 
 @functools.cache
@@ -81,27 +94,23 @@ def commands_to_type(to_type):
 def solve():
     input_file_contents = open(os.path.join("input", "day21")).read().rstrip()
     codes = input_file_contents.splitlines()
-    # codes = ["029A", "980A", "179A", "456A", "379A"]
+    #codes = ["029A", "980A", "179A", "456A", "379A"]
 
     sol_part1 = 0
+    sol_part2 = 0
     depth = 2
     for code in codes:
         print(code)
-        command = ""
         lengths = {i: 0 for i in range(depth + 1)}
-        commands = {i: "" for i in range(depth + 1)}
         for char, prev_char in zip(code, "A" + code):
-            # print(char, prev_char)
             cmd = type_single_command(char, prev_char, "NUMERICAL")
             lengths[0] += len(cmd)
-            commands[0] += cmd
             for d in range(depth):
-                cmd = "".join(commands_to_type(c + "A") for c in cmd.split("A")[:-1])
+                cmd = ''.join(commands_to_type(c + 'A') for c in cmd.split('A')[:-1])
+                print(d, len(cmd))
                 lengths[d + 1] += len(cmd)
-                commands[d + 1] += cmd
-            command += cmd
         sol_part1 += lengths[2] * int(code[:-1])
-        print(len(command))
+        #sol_part2 += lengths[25] * int(code[:-1])
     print("Part 1:", sol_part1)
 
     sol_part2 = None
